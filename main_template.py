@@ -6,11 +6,11 @@ app = Flask(__name__)
 api = Api(app)
 swagger = Swagger(app)
 
-class UppercaseText(Resource):
+class ProcessText(Resource):
 
     def get(self):
         """
-        This method responds to the GET request for this endpoint and returns the data in uppercase.
+        This method responds to the GET request for processing text and returns the processed text.
         ---
         tags:
         - Text Processing
@@ -19,7 +19,18 @@ class UppercaseText(Resource):
               in: query
               type: string
               required: true
-              description: The text to be converted to uppercase
+              description: The text to be processed
+            - name: duplication_factor
+              in: query
+              type: integer
+              required: false
+              description: Number of times to duplicate the text (default is 1)
+            - name: capitalization
+              in: query
+              type: string
+              enum: [UPPER, LOWER, None]
+              required: false
+              description: Capitalization type for the text (default is None)
         responses:
             200:
                 description: A successful GET request
@@ -28,15 +39,24 @@ class UppercaseText(Resource):
                       schema:
                         type: object
                         properties:
-                            text:
+                            processed_text:
                                 type: string
-                                description: The text in uppercase
+                                description: The processed text
         """
         text = request.args.get('text')
+        duplication_factor = int(request.args.get('duplication_factor', 1))
+        capitalization = request.args.get('capitalization')
 
-        return jsonify({"text": text.upper()})
+        processed_text = text * duplication_factor
 
-api.add_resource(UppercaseText, "/uppercase")
+        if capitalization == 'UPPER':
+            processed_text = processed_text.upper()
+        elif capitalization == 'LOWER':
+            processed_text = processed_text.lower()
+
+        return jsonify({"processed_text": processed_text})
+
+api.add_resource(ProcessText, "/process-text")
 
 if __name__ == "__main__":
     app.run(debug=True)
